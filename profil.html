@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Warga - SI-WARGA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen flex flex-col justify-between">
+    <nav class="bg-blue-700 text-white p-4 shadow flex flex-wrap justify-between items-center gap-2">
+        <div class="font-bold text-lg">SI-WARGA | Profil Warga</div>
+        <div class="space-x-4 text-sm font-medium flex items-center">
+            <a href="dashboard.html" class="hover:underline text-blue-200">Dashboard</a>
+            <a href="pembayaran.html" class="hover:underline text-blue-200">Pembayaran Iuran</a>
+            <a href="laporan.html" class="hover:underline text-blue-200">Laporan Riwayat</a>
+            <a href="profil.html" class="underline">Profil Saya</a>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs transition">Logout</button>
+        </div>
+    </nav>
+
+    <div class="max-w-2xl mx-auto px-4 py-8 w-full flex-1">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow">
+            <h2 class="text-2xl font-bold text-slate-800 mb-1">Pengaturan Profil Warga</h2>
+            <p class="text-slate-500 text-sm mb-6">Perbarui informasi data diri atau ubah password Anda di sini.</p>
+
+            <form id="formProfil" onsubmit="updateProfil(event)" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">NIK (Tidak Dapat Diubah)</label>
+                        <input type="text" id="nik" disabled class="w-full border border-slate-200 bg-slate-100 text-slate-500 rounded-lg px-3 py-2 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">No. Kartu Keluarga (KK)</label>
+                        <input type="text" id="no_kk" name="no_kk" maxlength="16" required class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap *</label>
+                        <input type="text" id="nama_lengkap" name="nama_lengkap" required class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Kelamin *</label>
+                        <select id="jenis_kelamin" name="jenis_kelamin" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">No. HP / WhatsApp *</label>
+                        <input type="tel" id="no_hp" name="no_hp" required class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Password Baru (Opsional)</label>
+                        <input type="password" name="password" minlength="6" placeholder="Kosongkan jika tidak diubah" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Alamat Domisili *</label>
+                    <textarea id="alamat_domisili" name="alamat_domisili" rows="2" required class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600"></textarea>
+                </div>
+
+                <button type="submit" id="btnSimpan" class="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-slate-400 text-white font-bold py-3 rounded-lg shadow transition">
+                    Simpan Perubahan Profil
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-white text-center py-4 text-xs text-slate-500 border-t">&copy; 2026 SI-WARGA</footer>
+
+    <script>
+        const user = cekAuthWarga();
+
+        document.getElementById('nik').value = user.nik;
+        document.getElementById('no_kk').value = user.no_kk || '';
+        document.getElementById('nama_lengkap').value = user.nama_lengkap || '';
+        document.getElementById('jenis_kelamin').value = user.jenis_kelamin || 'Laki-laki';
+        document.getElementById('no_hp').value = user.no_hp || '';
+        document.getElementById('alamat_domisili').value = user.alamat_domisili || '';
+
+        function updateProfil(e) {
+            e.preventDefault();
+            const form = e.target;
+            const btn = document.getElementById('btnSimpan');
+            btn.disabled = true;
+            btn.innerText = "Menyimpan Perubahan...";
+
+            const data = {
+                action: 'update_profil',
+                nik: user.nik,
+                no_kk: form.no_kk.value.trim(),
+                nama_lengkap: form.nama_lengkap.value.trim(),
+                jenis_kelamin: form.jenis_kelamin.value,
+                no_hp: form.no_hp.value.trim(),
+                alamat_domisili: form.alamat_domisili.value.trim(),
+                password: form.password.value
+            };
+
+            fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.result === 'success') {
+                    const updatedUser = {
+                        ...user,
+                        no_kk: data.no_kk,
+                        nama_lengkap: data.nama_lengkap,
+                        jenis_kelamin: data.jenis_kelamin,
+                        no_hp: data.no_hp,
+                        alamat_domisili: data.alamat_domisili
+                    };
+                    localStorage.setItem('si_warga_user', JSON.stringify(updatedUser));
+
+                    alert("Profil berhasil diperbarui!");
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert("Gagal memperbarui profil: " + (res.message || "Terjadi kesalahan."));
+                    btn.disabled = false;
+                    btn.innerText = "Simpan Perubahan Profil";
+                }
+            })
+            .catch(() => {
+                alert("Terjadi kesalahan koneksi server.");
+                btn.disabled = false;
+                btn.innerText = "Simpan Perubahan Profil";
+            });
+        }
+    </script>
+</body>
+</html>

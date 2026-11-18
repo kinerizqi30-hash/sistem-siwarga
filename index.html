@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrasi Warga Baru - SI-WARGA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex flex-col justify-between">
+    <div>
+        <nav class="bg-blue-700 text-white p-4 shadow-md flex justify-between items-center max-w-3xl mx-auto rounded-b-xl">
+            <h1 class="font-bold text-lg">SI-WARGA | Pendaftaran</h1>
+            <a href="login.html" class="bg-white text-blue-700 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-blue-50 transition">Sudah Punya Akun? Login</a>
+        </nav>
+
+        <div class="max-w-3xl mx-auto my-6 px-4">
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
+                <h2 class="text-2xl font-bold text-slate-800 mb-1">Formulir Pendaftaran Warga Baru</h2>
+                <p class="text-slate-500 text-sm mb-6">Daftarkan data diri Anda untuk mendapatkan akses ke layanan warga & pembayaran iuran.</p>
+
+                <form id="formRegister" onsubmit="registerWarga(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">NIK (16 Digit) *</label>
+                            <input type="text" name="nik" maxlength="16" minlength="16" pattern="\d{16}" title="NIK harus 16 digit angka" required placeholder="3201xxxxxxxxxxxx" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">No. Kartu Keluarga (KK) *</label>
+                            <input type="text" name="no_kk" maxlength="16" minlength="16" pattern="\d{16}" title="No. KK harus 16 digit angka" required placeholder="3201xxxxxxxxxxxx" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap *</label>
+                            <input type="text" name="nama_lengkap" required placeholder="Sesuai KTP" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Buat Password *</label>
+                            <input type="password" name="password" minlength="6" required placeholder="Minimal 6 karakter" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Kelamin *</label>
+                            <select name="jenis_kelamin" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">No. HP / WhatsApp *</label>
+                            <input type="tel" name="no_hp" required placeholder="0812xxxxxxxx" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Alamat Domisili (Blok / No. Rumah) *</label>
+                        <textarea name="alamat_domisili" rows="2" required placeholder="Contoh: Blok C4 No. 12, RT 05 / RW 02" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-600"></textarea>
+                    </div>
+                    <button type="submit" id="btnSubmit" class="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-slate-400 text-white font-bold py-3 rounded-lg shadow transition">
+                        Daftar Sekarang
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white text-center py-4 text-xs text-slate-500 border-t">&copy; 2026 SI-WARGA</footer>
+
+    <script>
+        function registerWarga(e) {
+            e.preventDefault();
+            const form = e.target;
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = "Mendaftarkan Data...";
+
+            const data = {
+                action: 'register',
+                nik: form.nik.value.trim(),
+                no_kk: form.no_kk.value.trim(),
+                nama_lengkap: form.nama_lengkap.value.trim(),
+                password: form.password.value,
+                jenis_kelamin: form.jenis_kelamin.value,
+                no_hp: form.no_hp.value.trim(),
+                alamat_domisili: form.alamat_domisili.value.trim()
+            };
+
+            fetch(CONFIG.SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.result === 'success') {
+                    alert("Registrasi berhasil! Silakan login menggunakan NIK dan Password Anda.");
+                    window.location.href = 'login.html';
+                } else {
+                    alert("Gagal mendaftar: " + (res.message || "NIK sudah terdaftar."));
+                    btn.disabled = false;
+                    btn.innerText = "Daftar Sekarang";
+                }
+            })
+            .catch(() => {
+                alert("Terjadi kesalahan koneksi server.");
+                btn.disabled = false;
+                btn.innerText = "Daftar Sekarang";
+            });
+        }
+    </script>
+</body>
+</html>

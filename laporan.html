@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Transaksi - SI-WARGA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col justify-between">
+    <nav class="bg-blue-700 text-white p-4 shadow flex flex-wrap justify-between items-center gap-2">
+        <div class="font-bold text-lg">SI-WARGA | Laporan</div>
+        <div class="space-x-4 text-sm font-medium flex items-center">
+            <a href="dashboard.html" class="hover:underline text-blue-200">Dashboard</a>
+            <a href="pembayaran.html" class="hover:underline text-blue-200">Pembayaran Iuran</a>
+            <a href="laporan.html" class="underline">Laporan Riwayat</a>
+            <a href="profil.html" class="hover:underline text-blue-200">Profil Saya</a>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs transition">Logout</button>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 py-8 w-full flex-1">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800">Riwayat & Laporan Pembayaran Anda</h2>
+                <p class="text-slate-500 text-sm">Klik "Kwitansi" untuk melihat bukti pembayaran resmi.</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-slate-50 border-b text-slate-600">
+                        <th class="p-3">Waktu</th>
+                        <th class="p-3">Jenis Iuran</th>
+                        <th class="p-3">Periode</th>
+                        <th class="p-3">Nominal</th>
+                        <th class="p-3">Metode</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelLaporan" class="divide-y">
+                    <tr><td colspan="7" class="p-4 text-center text-slate-500">Memuat data riwayat...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Kwitansi Digital -->
+    <div id="modalKwitansi" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border">
+            <div class="text-center border-b pb-4 mb-4">
+                <h3 class="font-bold text-lg text-slate-800">KWITANSI PEMBAYARAN DIGITAL</h3>
+                <p class="text-xs text-slate-500">SI-WARGA RT 05 / RW 02</p>
+            </div>
+            <div class="space-y-2.5 text-sm text-slate-700" id="isiKwitansi"></div>
+            <div class="mt-6 flex gap-2">
+                <button onclick="window.print()" class="flex-1 bg-blue-700 hover:bg-blue-800 text-white py-2 rounded-lg text-sm font-semibold">🖨️ Cetak</button>
+                <button onclick="tutupKwitansi()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 py-2 rounded-lg text-sm font-semibold">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white text-center py-4 text-xs text-slate-500 border-t">&copy; 2026 SI-WARGA</footer>
+
+    <script>
+        const user = cekAuthWarga();
+        let dataRiwayat = [];
+
+        fetch(`${CONFIG.SCRIPT_URL}?action=get_riwayat&nik=${user.nik}`)
+        .then(res => res.json())
+        .then(res => {
+            const tbody = document.getElementById('tabelLaporan');
+            tbody.innerHTML = "";
+            if (res.result === 'success' && res.riwayat.length > 0) {
+                dataRiwayat = res.riwayat;
+                res.riwayat.forEach((item, idx) => {
+                    const badgeColor = item.status === 'Lunas'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 text-slate-600">${item.tanggal}</td>
+                            <td class="p-3 font-semibold text-slate-800">${item.jenis}</td>
+                            <td class="p-3">${item.periode}</td>
+                            <td class="p-3 font-semibold">${formatRupiah(item.nominal)}</td>
+                            <td class="p-3">${item.metode}</td>
+                            <td class="p-3"><span class="${badgeColor} px-2.5 py-0.5 rounded-full text-xs font-semibold">${item.status}</span></td>
+                            <td class="p-3 text-center">
+                                <button onclick="bukaKwitansi(${idx})" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1 rounded border border-blue-200">
+                                    Kwitansi
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">Belum ada riwayat transaksi.</td></tr>`;
+            }
+        });
+
+        function bukaKwitansi(idx) {
+            const item = dataRiwayat[idx];
+            document.getElementById('isiKwitansi').innerHTML = `
+                <div class="flex justify-between"><span class="text-slate-500">Nama Warga:</span><span class="font-bold">${user.nama_lengkap}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">NIK:</span><span class="font-mono">${user.nik}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Alamat:</span><span>${user.alamat_domisili}</span></div>
+                <hr class="my-2">
+                <div class="flex justify-between"><span class="text-slate-500">Tanggal Bayar:</span><span>${item.tanggal}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Jenis Iuran:</span><span class="font-semibold">${item.jenis}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Periode:</span><span>${item.periode}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Metode:</span><span>${item.metode}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Catatan:</span><span>${item.catatan || '-'}</span></div>
+                <hr class="my-2">
+                <div class="flex justify-between text-base"><span class="font-bold">Total Bayar:</span><span class="font-bold text-emerald-700">${formatRupiah(item.nominal)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Status:</span><span class="font-bold text-emerald-600">${item.status}</span></div>
+            `;
+            const modal = document.getElementById('modalKwitansi');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function tutupKwitansi() {
+            const modal = document.getElementById('modalKwitansi');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
